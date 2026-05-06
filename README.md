@@ -72,8 +72,8 @@ A CUDA-enabled GPU is recommended. Some scripts use `.cuda()` directly, so CPU-o
 ### Installation
 
 ```bash
-conda create -n dmad-pdm python=3.8.19 -y
-conda activate dmad-pdm
+conda create -n MMC python=3.8.19 -y
+conda activate MMC
 
 # Install PyTorch according to your CUDA version.
 # Example for CUDA 12.4:
