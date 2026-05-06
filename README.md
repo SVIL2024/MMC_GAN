@@ -97,7 +97,7 @@ If you need to download a dataset, these resources may be helpful:
 * USCD Ped2 [[Dataset](http://www.svcl.ucsd.edu/projects/anomaly/UCSD_Anomaly_Dataset.tar.gz)]
 * CUHK Avenue [[Dataset](http://www.cse.cuhk.edu.hk/leojia/projects/detectabnormal/Avenue_Dataset.zip)]
 * ShanghaiTech [[Dataset](https://github.com/StevenLiuWen/ano_pred_cvpr2018)]
-*Other files: 
+* Other files: 
 Link: https://pan.baidu.com/s/14gZ8UfKyo4uiRua_8RIoBg?pwd=rb6r
 Please download the datasets from their official sources and organize the extracted frames as follows:
 
