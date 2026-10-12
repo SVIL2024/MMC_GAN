@@ -1,12 +1,12 @@
-# Normality-Constrained Collaborative Adversarial Learning for Robust Video Anomaly Detection
+# Normality-Constrained Collaborative Adversarial Learning for Video Anomaly Detection
 
-Official PyTorch implementation of **Normality-Constrained Collaborative Adversarial Learning for Robust Video Anomaly Detection**.
+Official PyTorch implementation of **Normality-Constrained Collaborative Adversarial Learning for Video Anomaly Detection** (NC-CAL).
 
 This repository provides the experimental code for video anomaly detection on **UCSD Ped2**, **CUHK Avenue**, and **ShanghaiTech**. The method follows a future-frame prediction paradigm: given consecutive historical frames, the model predicts the next frame and detects abnormal events according to the prediction discrepancy between the generated frame and the real future frame.
 
 ## Overview
 
-The proposed framework, named **NC-CAL**, integrates multiple complementary modules for robust anomaly detection:
+The proposed framework, named **NC-CAL**, integrates multiple complementary modules for video anomaly detection:
 
 - **GAN-based adversarial learning** for improving the realism and temporal consistency of predicted frames.
 - **Memory module** for storing compact normal prototypes and suppressing abnormal reconstruction.
@@ -20,7 +20,7 @@ The whole framework is designed to jointly model spatial structures and temporal
 ## Project Structure
 
 ```text
-DMAD-PDM/
+MMC-AL/
 ├── Train_ped2_avenue.py                # Training script for UCSD Ped2 and Avenue
 ├── Evaluate_ped2.py                    # Evaluation script for UCSD Ped2
 ├── process_avenue.py                   # Obtain the raw anomaly scores of the Avenue dataset
@@ -54,6 +54,22 @@ DMAD-PDM/
 │
 └── bkg/                                # Background templates / background information
 ```
+
+### Directories and files not included in this repository
+
+The following entries of the tree above describe paths that are **not** tracked in this
+repository and must be created or supplied before the scripts can run:
+
+- `modelzoo/` — trained checkpoints. `Evaluate_ped2.py` expects
+  `./modelzoo/model_ped2_99.16.pth` by default and will fall back to the path given by
+  `--model_dir`.
+- `exp/`, `exp/<dataset>/log/` — result files written by the evaluation scripts.
+- `data/` — the frame-level label arrays (`frame_labels_<dataset>.npy`).
+- `bkg/`, `bkg_/` — background templates estimated by `utils.py`.
+
+The dataset path is **hard-coded** in the evaluation scripts
+(`--dataset_path`, default `E:\DMAD-master\DMAD-PDM\data\datasets\`) and must be
+overridden on the command line or edited in the script.
 
 ## Environment
 
@@ -186,3 +202,21 @@ The core workflow of this repository is:
 ## Acknowledgement
 
 This implementation is developed for research on unsupervised video anomaly detection. The project is built upon future-frame prediction, adversarial learning, memory-augmented modeling, self-supervised structural prediction, and motion-aware deformation alignment.
+
+NC-CAL builds on components introduced in earlier work and adopts them rather than
+proposing them:
+
+- Future-frame prediction baseline: Liu et al., *Future Frame Prediction for Anomaly
+  Detection — A New Baseline*, CVPR 2018.
+- SSPCAB self-supervised context completion: Ristea et al., *Self-Supervised Predictive
+  Convolutional Attentive Block*, CVPR 2017.
+- Memory-augmented normality modeling with hard shrinkage: Park et al., *Weakly
+  Supervised Video Anomaly Detection via Center-Guided Discriminative Learning and
+  Multiresolution Sequence Modeling* (MNAD), CVPR 2020; Gong et al., *Memorizing
+  Normality to Detect Anomaly*, ICCV 2019.
+- Pyramid Deformation Module: Liu et al. (DMAD), which also provides the structure on
+  which this repository's training and evaluation pipeline is built.
+- Motion-estimation baselines used only for comparison: FlowNet2-SD (Ilg et al., ICCV
+  2017) and RAFT-Small (Teed and Deng, ECCV 2020).
+
+Please cite the original works when reusing these components.
