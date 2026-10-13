@@ -1,12 +1,12 @@
-# Normality-Constrained Collaborative Adversarial Learning for Video Anomaly Detection
+# Normality-Constrained Collaborative Adversarial Learning for Robust Video Anomaly Detection
 
-Official PyTorch implementation of **Normality-Constrained Collaborative Adversarial Learning for Video Anomaly Detection** (NC-CAL).
+Official PyTorch implementation of **Normality-Constrained Collaborative Adversarial Learning for Robust Video Anomaly Detection**.
 
 This repository provides the experimental code for video anomaly detection on **UCSD Ped2**, **CUHK Avenue**, and **ShanghaiTech**. The method follows a future-frame prediction paradigm: given consecutive historical frames, the model predicts the next frame and detects abnormal events according to the prediction discrepancy between the generated frame and the real future frame.
 
 ## Overview
 
-The proposed framework, named **NC-CAL**, integrates multiple complementary modules for video anomaly detection:
+The proposed framework, named **NC-CAL**, integrates multiple complementary modules for robust anomaly detection:
 
 - **GAN-based adversarial learning** for improving the realism and temporal consistency of predicted frames.
 - **Memory module** for storing compact normal prototypes and suppressing abnormal reconstruction.
@@ -27,10 +27,9 @@ MMC-AL/
 ├── Evaluate_avenue.py                  # Evaluation script for CUHK Avenue  
 ├── Train_shanghai.py                   # Training script for ShanghaiTech
 ├── Evaluate_shanghai.py                # Evaluation script for ShanghaiTech
-├── HCFNet.py                           # Hierarchical context fusion / attention module
-├── WavePooling.py                      # WaveBlock / wave pooling module
-├── losses.py                           # Intensity, gradient, adversarial, and related losses
-├── utils.py                            # Utility functions for anomaly score, AUC, 
+├── dataset_utils.py                    # Leakage-free video-level train/validation split
+├── losses.py                           # BCE adversarial objectives
+├── utils.py                            # Background and anomaly-score utilities
 │
 ├── model/                              # Model definition directory
 │   ├── final_future_prediction_ped2.py       # Future-frame prediction model for Ped2
@@ -41,35 +40,13 @@ MMC-AL/
 │   ├── pix2pix_networks.py                   # Pix2Pix generator/discriminator networks
 │   └── sspcab_torch.py                       # SSPCAB self-supervised prediction module
 │
-├── exp/                                # Experimental results and checkpoints
-│   ├── res_list.npz                    # General result file
-│   ├── res_list_ped2.npz               # Result file for UCSD Ped2
-│   ├── res_list_avenue.npz             # Result file for CUHK Avenue
-│   └── res_list_shanghai.npz           # Result file for ShanghaiTech
-│
 ├── data/                               # Frame-level labels used during evaluation
 │   ├── frame_labels_ped2.npy           # Frame-level labels for UCSD Ped2
 │   ├── frame_labels_avenue.npy         # Frame-level labels for CUHK Avenue
 │   └── frame_labels_shanghai.npy       # Frame-level labels for ShanghaiTech
 │
-└── bkg/                                # Background templates / background information
+└── bkg_ped2.jpg                        # Fixed Ped2 background template
 ```
-
-### Directories and files not included in this repository
-
-The following entries of the tree above describe paths that are **not** tracked in this
-repository and must be created or supplied before the scripts can run:
-
-- `modelzoo/` — trained checkpoints. `Evaluate_ped2.py` expects
-  `./modelzoo/model_ped2_99.16.pth` by default and will fall back to the path given by
-  `--model_dir`.
-- `exp/`, `exp/<dataset>/log/` — result files written by the evaluation scripts.
-- `data/` — the frame-level label arrays (`frame_labels_<dataset>.npy`).
-- `bkg/`, `bkg_/` — background templates estimated by `utils.py`.
-
-The dataset path is **hard-coded** in the evaluation scripts
-(`--dataset_path`, default `E:\DMAD-master\DMAD-PDM\data\datasets\`) and must be
-overridden on the command line or edited in the script.
 
 ## Environment
 
@@ -95,8 +72,8 @@ conda activate MMC
 # Example for CUDA 12.4:
 pip install torch==2.4.1 torchvision==0.19.1 --index-url https://download.pytorch.org/whl/cu124
 
-# Install other dependencies
-pip install numpy==1.21.5 opencv-python==4.10.0.84 scikit-learn matplotlib tqdm timm imageio
+# Install other dependencies from the repository root
+pip install -r requirements.txt
 ```
 
 If your CUDA version is different, please install the corresponding PyTorch build from the official PyTorch installation guide.
@@ -134,7 +111,8 @@ data/
 │   │
 │   └── shanghai/
 │       ├── training/frames/
-│       └── testing/frames/
+    │       ├── testing/frames/
+    │       └── testing/test_frame_mask/
 │
 ├── frame_labels_ped2.npy
 ├── frame_labels_avenue.npy
@@ -146,25 +124,53 @@ data/
 
 ## Training
 
+Run all commands from the `MMC-AL` directory. The paper configuration is used
+by default for every dataset: RGB input, batch size 8, 60 epochs, 6 Phase-1
+epochs, adversarial weight 0.5, a 2,000-item memory bank with 512-dimensional
+prototypes, and a memory sparsity weight of 0.002.
+
+```bash
+cd MMC-AL
+```
+
 ### UCSD Ped2 
 
 ```bash
-python Train_ped2_avenue.py 
+python Train_ped2_avenue.py --dataset_type ped2 --dataset_path /path/to/ped2
 ```
 
 
 ### CUHK Avenue
 
 ```bash
-python Train_ped2_avenue.py                       
+python Train_ped2_avenue.py --dataset_type avenue --dataset_path /path/to/avenue
 ```
 
 
 ### ShanghaiTech
 
 ```bash
-python Train_shanghai.py 
+python Train_shanghai.py --dataset_path /path/to/shanghai
 ```
+
+ShanghaiTech background templates are generated locally on the first training
+or evaluation run from the corresponding frame split. The generated `bkg/`
+and `bkg_/` directories are ignored by Git and must not be uploaded.
+
+### Leakage-free model selection
+
+The training scripts never read the official testing split or its anomaly
+labels. By default, 20% of the normal training videos are held out at the
+video level (`--val_fraction 0.2 --split_seed 2021`). The checkpoint with the
+lowest future-frame prediction MSE on this normal-only validation subset is
+selected, with optional early stopping controlled by
+`--early_stop_patience`. Run the corresponding `Evaluate_*.py` script only
+after training to report the official test AUC once.
+
+For a fixed-epoch protocol, pass `--skip_validation`. In that mode all normal
+training videos are used and the final epoch is saved; the test set is still
+not evaluated during training. ShanghaiTech test-video background templates
+are loaded only by `Evaluate_shanghai.py`, never by `Train_shanghai.py`.
 
 
 ## Evaluation
@@ -172,21 +178,33 @@ python Train_shanghai.py
 ### UCSD Ped2
 
 ```bash
-python Evaluate_ped2.py 
+python Evaluate_ped2.py --dataset_path /path/to/ped2 \
+  --model_dir ./exp/ped2/log/bool_ped2.pth
 ```
 
 ### CUHK Avenue
 
 ```bash
-python process_avenue.py   
-python Evaluate_avenue.py 
+python Evaluate_avenue.py --dataset_path /path/to/avenue \
+  --model_dir ./exp/avenue/log/bool_ped2.pth
 ```
 
 ### ShanghaiTech
 
 ```bash
-python Evaluate_shanghai.py
+python Evaluate_shanghai.py --dataset_path /path/to/shanghai \
+  --model_dir ./exp/shanghai/log/new_shanghai.pth
 ```
+
+## Checkpoints
+
+The paper-consistent implementation uses a unified U-Net + Memory + SSPCAB +
+PDM generator for all three datasets. Older ShanghaiTech checkpoints produced
+by the previous VQ/WavePooling/PPA implementation are not architecture-compatible
+with this version and must not be used to reproduce the reported method. Train
+new checkpoints with the commands above. Large checkpoint files are excluded
+from Git; publish newly trained weights through GitHub Releases or an external
+download link instead of committing them to the repository.
 
 ## Method Pipeline
 
@@ -202,21 +220,3 @@ The core workflow of this repository is:
 ## Acknowledgement
 
 This implementation is developed for research on unsupervised video anomaly detection. The project is built upon future-frame prediction, adversarial learning, memory-augmented modeling, self-supervised structural prediction, and motion-aware deformation alignment.
-
-NC-CAL builds on components introduced in earlier work and adopts them rather than
-proposing them:
-
-- Future-frame prediction baseline: Liu et al., *Future Frame Prediction for Anomaly
-  Detection — A New Baseline*, CVPR 2018.
-- SSPCAB self-supervised context completion: Ristea et al., *Self-Supervised Predictive
-  Convolutional Attentive Block*, CVPR 2017.
-- Memory-augmented normality modeling with hard shrinkage: Park et al., *Weakly
-  Supervised Video Anomaly Detection via Center-Guided Discriminative Learning and
-  Multiresolution Sequence Modeling* (MNAD), CVPR 2020; Gong et al., *Memorizing
-  Normality to Detect Anomaly*, ICCV 2019.
-- Pyramid Deformation Module: Liu et al. (DMAD), which also provides the structure on
-  which this repository's training and evaluation pipeline is built.
-- Motion-estimation baselines used only for comparison: FlowNet2-SD (Ilg et al., ICCV
-  2017) and RAFT-Small (Teed and Deng, ECCV 2020).
-
-Please cite the original works when reusing these components.
