@@ -1,6 +1,6 @@
-# Normality-Constrained Collaborative Adversarial Learning for Robust Video Anomaly Detection
+# Normality-Constrained Collaborative Adversarial Learning for Video Anomaly Detection
 
-Official PyTorch implementation of **Normality-Constrained Collaborative Adversarial Learning for Robust Video Anomaly Detection**.
+Official PyTorch implementation of **Normality-Constrained Collaborative Adversarial Learning for Video Anomaly Detection**.
 
 This repository provides the experimental code for video anomaly detection on **UCSD Ped2**, **CUHK Avenue**, and **ShanghaiTech**. The method follows a future-frame prediction paradigm: given consecutive historical frames, the model predicts the next frame and detects abnormal events according to the prediction discrepancy between the generated frame and the real future frame.
 
