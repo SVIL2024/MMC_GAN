@@ -122,11 +122,6 @@ data/
 
 ## Training
 
-Run all commands from the `MMC-AL` directory. The paper configuration is used
-by default for every dataset: RGB input, batch size 8, 60 epochs, 6 Phase-1
-epochs, adversarial weight 0.5, a 2,000-item memory bank with 512-dimensional
-prototypes, and a memory sparsity weight of 0.002.
-
 ```bash
 cd MMC-AL
 ```
@@ -150,26 +145,6 @@ python Train_ped2_avenue.py --dataset_type avenue --dataset_path /path/to/avenue
 ```bash
 python Train_shanghai.py --dataset_path /path/to/shanghai
 ```
-
-ShanghaiTech background templates are generated locally on the first training
-or evaluation run from the corresponding frame split. The generated `bkg/`
-and `bkg_/` directories are ignored by Git and must not be uploaded.
-
-### Leakage-free model selection
-
-The training scripts never read the official testing split or its anomaly
-labels. By default, 20% of the normal training videos are held out at the
-video level (`--val_fraction 0.2 --split_seed 2021`). The checkpoint with the
-lowest future-frame prediction MSE on this normal-only validation subset is
-selected, with optional early stopping controlled by
-`--early_stop_patience`. Run the corresponding `Evaluate_*.py` script only
-after training to report the official test AUC once.
-
-For a fixed-epoch protocol, pass `--skip_validation`. In that mode all normal
-training videos are used and the final epoch is saved; the test set is still
-not evaluated during training. ShanghaiTech test-video background templates
-are loaded only by `Evaluate_shanghai.py`, never by `Train_shanghai.py`.
-
 
 ## Evaluation
 
