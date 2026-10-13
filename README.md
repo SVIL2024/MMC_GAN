@@ -90,8 +90,6 @@ If you need to download a dataset, these resources may be helpful:
 * USCD Ped2 [[Dataset](http://www.svcl.ucsd.edu/projects/anomaly/UCSD_Anomaly_Dataset.tar.gz)]
 * CUHK Avenue [[Dataset](http://www.cse.cuhk.edu.hk/leojia/projects/detectabnormal/Avenue_Dataset.zip)]
 * ShanghaiTech [[Dataset](https://github.com/StevenLiuWen/ano_pred_cvpr2018)]
-* Other files: 
-Link: https://pan.baidu.com/s/14gZ8UfKyo4uiRua_8RIoBg?pwd=rb6r
 Please download the datasets from their official sources and organize the extracted frames as follows:
 
 ```text
@@ -195,16 +193,6 @@ python Evaluate_avenue.py --dataset_path /path/to/avenue \
 python Evaluate_shanghai.py --dataset_path /path/to/shanghai \
   --model_dir ./exp/shanghai/log/new_shanghai.pth
 ```
-
-## Checkpoints
-
-The paper-consistent implementation uses a unified U-Net + Memory + SSPCAB +
-PDM generator for all three datasets. Older ShanghaiTech checkpoints produced
-by the previous VQ/WavePooling/PPA implementation are not architecture-compatible
-with this version and must not be used to reproduce the reported method. Train
-new checkpoints with the commands above. Large checkpoint files are excluded
-from Git; publish newly trained weights through GitHub Releases or an external
-download link instead of committing them to the repository.
 
 ## Method Pipeline
 
